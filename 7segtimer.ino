@@ -79,19 +79,6 @@ void onKnobTurn(EncoderButton& eb) {
 }
 
 void onKnobClick(EncoderButton& eb) {
-  // switch(progState)
-  // {
-  //   case COUNTING:
-  //     //progState = IDLE;
-  //     break;
-  //   case IDLE:
-  //     // timerStartTimestampMs = millis();
-  //     progState = COUNTING;
-  //     break;
-  //   case ALARM:
-  //     progState = IDLE;
-  //     break;
-  // }
   if (timeLeft <= 0) {
     silenceAlarm = true;
   }
