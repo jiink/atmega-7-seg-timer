@@ -39,6 +39,9 @@ int lastDisplayNum = 0;
 int toneOffset = 0;
 unsigned long toneOffsetTimer = 0;
 const unsigned long maxAlarmLength = MIN_TO_MS(2);
+unsigned long alarmTimer = 0; // shut off alarm automatically after maxAlarmLength ms
+unsigned long alarmStartedTimestamp = 0;
+bool doAlarm = false;
 
 // Create one or more callback functions 
 void onKnobTurn(EncoderButton& eb) {
@@ -119,13 +122,17 @@ void loop() {
         displayNum = (minutes * 100) + seconds;
         break;
     }
-    bool doAlarm = false;
     if (timeLeft == 0) {
+      bool wasAlreadyDoingAlarm = (doAlarm == true);
       doAlarm = true;
-    }
+      if (!wasAlreadyDoingAlarm)
+      {
+        toneOffset = 0;
+        alarmStartedTimestamp = millis();
+      }
+    } else { doAlarm = false; }
     if (doAlarm) {
       if (silenceAlarm) {
-        //display.showNumberHexEx(0x00FF);
         display.setSegments(TXT_OFF);
         noTone(BUZZER);
       } else {
@@ -142,6 +149,10 @@ void loop() {
             toneOffset = 0;
           }
         }
+        if (millis() - alarmStartedTimestamp > maxAlarmLength)
+        {
+          silenceAlarm = true;
+        }
       }
     }
     else {
@@ -149,7 +160,6 @@ void loop() {
         display.showNumberDecEx(displayNum, SHOW_COLON);
         if (timeLeft < 1 * 1000 ) {
           tone(BUZZER, 1200, 500);
-          toneOffset = 0;
         } else if (timeLeft < 10 * 1000 ) {
           tone(BUZZER, 300, 50);
         } else if (timeLeft < 30 * 1000 ) {
