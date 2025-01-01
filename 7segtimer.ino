@@ -1,3 +1,5 @@
+// No effort was made to make this code nice. It is very hard to follow along with.
+
 #include <TM1637Display.h>
 #include <EncoderButton.h>
 #include <stdint.h>
