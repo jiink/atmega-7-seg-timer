@@ -32,10 +32,13 @@ DisplayMode displayMode = HOURS_MINUTES;
 TM1637Display display = TM1637Display(CLK, DIO); // Creates display object that represents the TM1637 display
 EncoderButton knob(KNOB_CLK, KNOB_DT, SWITCH);
 
-long timeLeft = MIN_TO_MS(3);
+long timeLeft = 0;
 long startTimestamp = 0;
-bool silenceAlarm = false;
+bool silenceAlarm = true;
 int lastDisplayNum = 0;
+int toneOffset = 0;
+unsigned long toneOffsetTimer = 0;
+const unsigned long maxAlarmLength = MIN_TO_MS(2);
 
 // Create one or more callback functions 
 void onKnobTurn(EncoderButton& eb) {
@@ -127,8 +130,18 @@ void loop() {
         noTone(BUZZER);
       } else {
         display.showNumberHexEx(0xFFFF);
-        //tone(BUZZER, 277);
-        tone(BUZZER, (int)(cos(millis()/(float)100) * 150 + 500));
+        if ((millis() / 50) % 2 == 0) {
+          tone(BUZZER, toneOffset + 80); 
+        } else {
+          tone(BUZZER, toneOffset + 80 + 96); 
+        }
+        if (millis() - toneOffsetTimer >= 5000) {
+          toneOffsetTimer = millis();
+          toneOffset += 400;
+          if (toneOffset > 1600) { 
+            toneOffset = 0;
+          }
+        }
       }
     }
     else {
@@ -136,6 +149,7 @@ void loop() {
         display.showNumberDecEx(displayNum, SHOW_COLON);
         if (timeLeft < 1 * 1000 ) {
           tone(BUZZER, 1200, 500);
+          toneOffset = 0;
         } else if (timeLeft < 10 * 1000 ) {
           tone(BUZZER, 300, 50);
         } else if (timeLeft < 30 * 1000 ) {
