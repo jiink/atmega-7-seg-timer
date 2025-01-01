@@ -22,6 +22,16 @@ static const uint8_t TXT_OFF[]  = {
   0b01110001
 };
 
+// https://jasonacox.github.io/TM1637TinyDisplay/examples/7-segment-animator.html
+#define NUM_ALARM_FRAMES 3
+static const uint8_t alarmFrames[NUM_ALARM_FRAMES][4] = {
+  { 0x00, 0x00, 0x00, 0x00 },  // Frame 0
+  { 0x31, 0x01, 0x01, 0x07 },  // Frame 1
+  { 0x38, 0x08, 0x08, 0x0e },  // Frame 2
+};
+uint8_t currentAlarmFrame = 0;
+unsigned long animationTimer = 0;
+
 typedef enum
 {
   HOURS_MINUTES, // HH:MM
@@ -39,8 +49,7 @@ int lastDisplayNum = 0;
 int toneOffset = 0;
 unsigned long toneOffsetTimer = 0;
 const unsigned long maxAlarmLength = MIN_TO_MS(2);
-unsigned long alarmTimer = 0; // shut off alarm automatically after maxAlarmLength ms
-unsigned long alarmStartedTimestamp = 0;
+unsigned long alarmStartedTimestamp = 0; // shut off alarm automatically after maxAlarmLength ms
 bool doAlarm = false;
 
 // Create one or more callback functions 
@@ -52,12 +61,14 @@ void onKnobTurn(EncoderButton& eb) {
   //setDisplayNum(eb.position());
   
   //setDisplayNum(displayNum + eb.increment()*abs(eb.increment())*abs(eb.increment())*abs(eb.increment()));
-  if (timeLeft > 0) {
+  if (timeLeft > 5000) { // prevent alarming if knob was accidentally turned just a notch or two
     silenceAlarm = false;
   }
   long timeToAdjustByMs = MIN_TO_MS(1);
   if (timeLeft > MIN_TO_MS(10)) {
     timeToAdjustByMs = MIN_TO_MS(5);
+  } else if (timeLeft < 5 * 1000) {
+    timeToAdjustByMs = 1000;
   } else if (timeLeft < MIN_TO_MS(1)) {
     timeToAdjustByMs = 10 * 1000;
   }
@@ -136,7 +147,6 @@ void loop() {
         display.setSegments(TXT_OFF);
         noTone(BUZZER);
       } else {
-        display.showNumberHexEx(0xFFFF);
         if ((millis() / 50) % 2 == 0) {
           tone(BUZZER, toneOffset + 80); 
         } else {
@@ -148,6 +158,13 @@ void loop() {
           if (toneOffset > 1600) { 
             toneOffset = 0;
           }
+        }
+        if (millis() - animationTimer > 50)
+        {
+          animationTimer = millis();
+          // Also animate the display
+          currentAlarmFrame++;
+          display.setSegments(alarmFrames[currentAlarmFrame % NUM_ALARM_FRAMES]);
         }
         if (millis() - alarmStartedTimestamp > maxAlarmLength)
         {
