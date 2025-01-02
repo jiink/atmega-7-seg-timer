@@ -92,7 +92,7 @@ const uint8_t danceFrames[NUM_DANCE_FRAMES][4] = {
   { 0x08, 0x00, 0x00, 0x00 },  // Frame 62
   { 0x18, 0x00, 0x00, 0x00 }   // Frame 63
 };
-uint8_t currentDanceFrame = 0;
+int currentDanceFrame = 0;
 unsigned long danceAnimationTimer = 0;
 bool showDanceAnim = false;
 
