@@ -94,6 +94,7 @@ const uint8_t danceFrames[NUM_DANCE_FRAMES][4] = {
 };
 uint8_t currentDanceFrame = 0;
 unsigned long danceAnimationTimer = 0;
+bool showDanceAnim = false;
 
 // https://jasonacox.github.io/TM1637TinyDisplay/examples/7-segment-animator.html
 #define NUM_ALARM_FRAMES 3
@@ -152,6 +153,7 @@ void onKnobTurn(EncoderButton& eb) {
 void onKnobClick(EncoderButton& eb) {
   if (timeLeft <= 0) {
     silenceAlarm = true;
+    showDanceAnim = true;
   }
 }
 
@@ -205,10 +207,18 @@ void loop() {
     if (doAlarm) {
       if (silenceAlarm) {
         noTone(BUZZER);
-        if (millis() - danceAnimationTimer > 25)
+        if (showDanceAnim)
         {
-          danceAnimationTimer = millis();
-          display.setSegments(danceFrames[++currentDanceFrame % NUM_DANCE_FRAMES]);
+          if (millis() - danceAnimationTimer > 25)
+          {
+            danceAnimationTimer = millis();
+            display.setSegments(danceFrames[++currentDanceFrame % NUM_DANCE_FRAMES]);
+            if (currentDanceFrame > 1000)
+            {
+              showDanceAnim = false;
+              currentDanceFrame = 0;
+            }
+          }
         }
       } else {
         if ((millis() / 50) % 2 == 0) {
